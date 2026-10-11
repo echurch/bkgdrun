@@ -1,0 +1,8 @@
+*.root
+*.out
+*.err
+*~
+*.*~
+TSFile*
+!**/gdml-ec/Radionuclides/
+!/gdml-ec/Radionuclides/
