@@ -1,8 +1,8 @@
 #!/bin/bash
-# Usage: run_in_container.sh <fcl> <topdir> <output_dir> <work_dir>   (runs INSIDE the container)
-FCL="$1"; TOPDIR="$2"; OUTPUT_DIR="$3"; WORK="$4"
+# Usage: run_in_container.sh <fcl> <root_dir> <output_dir> <work_dir>   (runs INSIDE the container)
+FCL="$1"; ROOT_DIR="$2"; OUTPUT_DIR="$3"; WORK="$4"
 WORKER_DIR=/rcfs/projects/dunelb/chur558/containers/worker
-V=$WORKER_DIR/duneec/v10_17_01
+V=$WORKER_DIR/duneec/v10_17_01/bkgdrun
 SLURMANA=$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
 RADDIR=$V/gdml-ec/Radionuclides
 
@@ -14,16 +14,17 @@ NUC=$(grep -v '^\s*#' "$FCL" | grep 'Nuclide:' | head -1 | sed 's/.*://; s/[]["[
 HIST=$(grep -v '^\s*#' "$FCL" | grep 'TFileService' | head -1 | sed 's/.*fileName:[[:space:]]*"\([^"]*\)".*/\1/')
 SPEC="$RADDIR/$NUC.root"
 
-# j4bgexp appends "*-hist*.root" to -i, so pass the name up to "-hist"
-IN="$TOPDIR/root_files/${HIST%%-hist*}"
+# j4bgexp appends "*-hist*.root" to -i, so pass the fcl TFileService name up to "-hist"
+IN="$ROOT_DIR/${HIST%%-hist*}"
 
-echo "FCL=$FCL"; echo "BqPercc=$BQ  Nuclide=$NUC"; echo "-i $IN  (hist file: $HIST)"; echo "-s $SPEC"
+echo "FCL=$FCL"; echo "BqPercc=$BQ  Nuclide=$NUC"; echo "-i $IN"; echo "-s $SPEC"
 [[ -n "$BQ" && -n "$NUC" && -n "$HIST" ]] || { echo "Could not parse fcl"; exit 1; }
 [[ -f "$SPEC" ]] || { echo "Spectrum file missing: $SPEC"; exit 1; }
 ls $IN*-hist*.root >/dev/null 2>&1 || { echo "No input matches $IN*-hist*.root"; exit 1; }
 
 cd "$WORKER_DIR" || exit 1
-source "$WORKER_DIR/setup.sh"
+source "$V/setup.sh"
+
 
 # j4bgexp copies the fcl into $WORK/lar-tmp-out and runs lar there, so make sure
 # includes next to the original fcl are still found
@@ -32,7 +33,9 @@ export FHICL_FILE_PATH="$(dirname "$FCL"):${FHICL_FILE_PATH}"
 # j4bgexp finds its lar art-root output via os.getcwd()/lar-tmp-out/, so it must
 # run from this absolute per-task directory
 mkdir -p "$WORK" "$OUTPUT_DIR" && cd "$WORK" || exit 1
-"$SLURMANA/j4bgexp.py" -f "$FCL" -c "$BQ" -i "$IN" -s "$SPEC"
+J4_CMD=("$SLURMANA/j4bgexp.py" -f "$FCL" -c "$BQ" -i "$IN" -s "$SPEC")
+echo "Running in $PWD on $(hostname):"; printf '%q ' "${J4_CMD[@]}"; echo
+"${J4_CMD[@]}"
 STATUS=$?
 
 if (( STATUS == 0 )); then

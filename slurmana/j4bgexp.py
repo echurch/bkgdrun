@@ -25,6 +25,7 @@ Volume = None
 Material = None
 
 import ROOT
+import json
 ROOT.gInterpreter.Declare(r'''
 #include <string>
 #include <algorithm>
@@ -142,14 +143,17 @@ def runOne(fcl):
     mass = 0
     with open(outdir+txt_file) as infile:
         for line in infile:
-            if "weighs" in line and Volume in line:
-                mass += float(line.split("weighs")[-1].split(" ")[1])
-                print("Adding mass for Volume " + Volume + ": " + str(mass) )
-            elif "weighs" in line and Material in line and "NA" in Volume: # This means I don't have a Volume name
-                mass += float(line.split("weighs")[-1].split(" ")[1])
-                print("Adding mass for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(mass) )
+            if "Element" in line and "Weight" in line and Volume.lower().replace("vol","").replace("box","") in line.lower():
 
-    print ("Chkpoint, grep'd out the mass. It is " + str(mass) + " grams.")
+                mass =  float(line.split(" ")[-1].split("\n")[0])
+                print("Adding mass for Volume " + Volume + ": " + str(mass) )
+                break;
+            elif "Element" in line and "Weight" in line and Material.lower() in line.lower() and "NA" in Volume: # This means I don't have a Volume name
+                mass = float(line.split(" ")[-1].split("\n")[0])
+                print("Adding mass for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(mass) )
+                break;
+
+    print ("Chkpoint, grep'd out the mass. It is " + str(mass) + " tonnes.")
 
  #   if  mass==0:
  #       print ("mass is 0. It's likely you don't have a properly set up larsoft envt. Ask Eric how to fix this... Or ...")
@@ -206,7 +210,8 @@ def wrapwords(strin):
 
 
 def main(argv):
-
+    import json
+    
     try:
         opts, args = getopt.getopt(argv,"hi:c:f:s",["ifilepath=","conc=","frac[ppb]=","ispec[1/sec/ppb/gm]="])
     except getopt.GetoptError:
@@ -298,7 +303,7 @@ def main(argv):
     evt = 12E12
 
     df = ROOT.RDataFrame(ch2)
-    ROOT.RDF.Experimental.AddProgressBar(df)   # replaces the manual "On entry ..." printout
+#    ROOT.RDF.Experimental.AddProgressBar(df)   # replaces the manual "On entry ..." printout
 
     # ---- fiducial volume cut string -------------------------------------------
     fid = ("abs(MCOrigin[0]) < {xmax} && "
@@ -369,19 +374,21 @@ def main(argv):
     # eval() will turn our sam json-understood text into a dictionary.
     try:
         # Sometimes this fails due apparently to a warning bolted on by sam_metadata_dumper about SIM-IDEs
-        mydict["sam_metadata"] = eval(return_sam)
+        print (f"return_sam for meta data: {return_sam} ")
+        mydict["sam_metadata"] = json.loads(return_sam)
 
     except:
         try:
-            mydict["sam_metadata"] = eval(str(return_sam).replace("\\n","").replace("\'","").split("available")[1])
+            mydict["sam_metadata"] = json.loads(str(return_sam).replace("\\n","").replace("\'","").split("available")[1])
         except:
             mydict["sam_metadata"] = "NULL"
 
     # mongodb complains about keys with "." in them.
     # Must now wrap all words in the config_metadata that hold a ":" with double quotes. Other formatting too. Only then can it be dicted.
+
     return_conf_fmt = wrapwords(return_conf.decode())
 
-    mydict["config_metadata"] = eval(return_conf_fmt)
+    mydict["config_metadata"] = return_conf_fmt
 
     # Let's go grab up the neutron decay info
     # look in 0th file path for gdml directory which should hold our sub-directory w root file with the TGraph that was used.
@@ -402,11 +409,11 @@ def main(argv):
     mydict["sam_metadata"] = dotfordash(mydict["sam_metadata"])
 
     print ("Integrated spectrum is: " + str(IntSpec) + " [1/ppb/sec/gm]")
-    print ("mass is: " + str(mass2) + " [gm]")
+    print ("mass is: " + str(mass2) + " [tonne]")
     print ("frac is: " + str(frac) + " [ppb]")
 
     print("Ngood: " + str(Ngood))
-    tsim = Ngood/mass2/frac/IntSpec
+    tsim = Ngood/mass2/1.E6/frac/IntSpec # 1E6 to convert to gms
     tcapinv = NcapsInd/tsim ## was NcapsInd
 
     print ("tsim is thus: " + str(tsim) + " [sec]")
@@ -423,7 +430,7 @@ def main(argv):
     mydict["primary"] = "neutrons"
 
 
-    mydict["massMaterial_gm"] = mass2
+    mydict["massMaterial_gm"] = mass2*1.0E6
     mydict["IntegratedSpectrum_invgm_ppb_sec"] = IntSpec 
     mydict["frac_ppb"] = frac
     mydict["simtime_sec"] = tsim
@@ -433,6 +440,7 @@ def main(argv):
     mydict["volume"] = Volume
     mydict["nuclide"] = "Null"
     mydict["material"] = Material
+    print("mydict[]config_meta][cneutronGen]: ", mydict['config_metadata']['cNeutronGen'])
     cngkeys = str( mydict["config_metadata"]["cNeutronGen"].keys())
     print ("config_metadata.cneutronGen keys are " + cngkeys )
     if "Volume" in cngkeys:
