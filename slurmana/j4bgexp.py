@@ -249,7 +249,7 @@ def main(argv):
     args      = create_parser()
     ipath     = str  (args.ifilepath)
     fhiclfile = str  (args.fhicl    )
-    frac      = float(args.conc     )
+    frac      = float(args.conc     ) * 1E9 # to convert to ppb
     IntSpec   = str  (args.spectrum )
 #    mass      = float(args.mass     )
 
