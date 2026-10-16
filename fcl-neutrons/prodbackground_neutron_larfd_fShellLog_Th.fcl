@@ -16,10 +16,10 @@ larfd_neutron:
  Nuclide:               ["SS304L_Th_Tot"]
 ## Material:              [".*",".*",".*",".*",".*", ".*"]
 ## Material:              ["RadioS460ML"]
- Material:              ["SS304L"]
+ Material:              ["fDuneSteel"]
  ## Volume is optional, but allows to constrain decays from Material && Volume
  ## Be sure this your Material is in your Volume, else no decays will happen.
- Volume:                ["volSteelShell"]
+ Volume:                ["fShellLog"]
  BqPercc:               [ 0.0000076 ]
  X0:                    [  -991.0  ]  
 # X1:                    [   990.0  ]
