@@ -26,6 +26,7 @@ Material = None
 
 import ROOT
 import json
+import ast
 ROOT.gInterpreter.Declare(r'''
 #include <string>
 #include <algorithm>
@@ -143,12 +144,12 @@ def runOne(fcl):
     mass = 0
     with open(outdir+txt_file) as infile:
         for line in infile:
-            if "Element" in line and "Weight" in line and Volume.lower().replace("vol","").replace("box","") in line.lower():
 
+            if "Element" in line and "Weight" in line and Volume.lower().replace("vol","").replace("box","").replace("fshell","shell").replace("log","").replace("radiorockshell","radiorock") in line.lower():
                 mass =  float(line.split(" ")[-1].split("\n")[0])
                 print("Adding mass for Volume " + Volume + ": " + str(mass) )
                 break;
-            elif "Element" in line and "Weight" in line and Material.lower() in line.lower() and "NA" in Volume: # This means I don't have a Volume name
+            elif "Element" in line and "Weight" in line and Material.lower().replace("fsteel","steel") in line.lower() and "NA" in Volume: # This means I don't have a Volume name
                 mass = float(line.split(" ")[-1].split("\n")[0])
                 print("Adding mass for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(mass) )
                 break;
@@ -205,6 +206,10 @@ def wrapwords(strin):
     # The braces make it look, finally, like a dictionary.
     strout = "{" + strout + "}"
 
+    idx = strout.index('"largana"')
+    truncated = strout[:idx].rstrip().rstrip(',') + '}'
+    strout = ast.literal_eval(truncated)
+    print (f"strout is {strout}")
     return strout
 
 
@@ -374,7 +379,7 @@ def main(argv):
     # eval() will turn our sam json-understood text into a dictionary.
     try:
         # Sometimes this fails due apparently to a warning bolted on by sam_metadata_dumper about SIM-IDEs
-        print (f"return_sam for meta data: {return_sam} ")
+        print (f"return_sam type " + str(type(return_sam)) + " for meta data: {return_sam} ")
         mydict["sam_metadata"] = json.loads(return_sam)
 
     except:
@@ -387,7 +392,8 @@ def main(argv):
     # Must now wrap all words in the config_metadata that hold a ":" with double quotes. Other formatting too. Only then can it be dicted.
 
     return_conf_fmt = wrapwords(return_conf.decode())
-
+    print (f"type of return_conf_fmt: {type(return_conf_fmt)}")
+    print (f"return_conf_fmt: {return_conf_fmt}")
     mydict["config_metadata"] = return_conf_fmt
 
     # Let's go grab up the neutron decay info
@@ -440,9 +446,12 @@ def main(argv):
     mydict["volume"] = Volume
     mydict["nuclide"] = "Null"
     mydict["material"] = Material
-    print("mydict[]config_meta][cneutronGen]: ", mydict['config_metadata']['cNeutronGen'])
+
+    print(f"mydict[config_meta].keys():  {mydict['config_metadata'].keys()}")
+    
     cngkeys = str( mydict["config_metadata"]["cNeutronGen"].keys())
-    print ("config_metadata.cneutronGen keys are " + cngkeys )
+
+
     if "Volume" in cngkeys:
         mydict["volume"] = mydict["config_metadata"]["cNeutronGen"]["Volume"][0] 
 

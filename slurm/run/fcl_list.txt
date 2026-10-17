@@ -1,3 +1,15 @@
 /rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_fShellLog_Early.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_fShellLog_Late.fcl
 /rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_fShellLog_Th.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volBeams_Early.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volBeams_Late.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volBeams_Th.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volConcrete_Early.fcl
 /rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volConcrete_Late.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volConcrete_Th.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volRadioRock_Early.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volRadioRock_Late.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volRadioRock_Th.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volShotbox_Early.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volShotbox_Late.fcl
+/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/fcl-neutrons/prodbackground_neutron_larfd_volShotbox_Th.fcl
