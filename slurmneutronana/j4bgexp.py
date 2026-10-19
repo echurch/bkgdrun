@@ -19,6 +19,7 @@ from ROOT import TFile,TChain,TGraph
 # globals
 IntSpec = None
 mass = None
+density = None
 frac = None
 ipath = None
 Volume = None
@@ -142,16 +143,21 @@ def runOne(fcl):
 
    # go grab and parse out.txt and look for mass and use the art-root file for sam -- not the way it's done here till now.
     mass = 0
+    density = 0
     with open(outdir+txt_file) as infile:
         for line in infile:
 
             if "Element" in line and "Weight" in line and Volume.lower().replace("vol","").replace("box","").replace("fshell","shell").replace("log","").replace("radiorockshell","radiorock") in line.lower():
-                mass =  float(line.split(" ")[-1].split("\n")[0])
-                print("Adding mass for Volume " + Volume + ": " + str(mass) )
+                density = float(line.split(" ")[-1].split("\n")[0])
+                mass =   float(line.split(" ")[-4][:-1])
+                print(" mass for Volume " + Volume + ": " + str(mass) )
+                print(" density for Volume " + Volume + ": " + str(density) )
                 break;
             elif "Element" in line and "Weight" in line and Material.lower().replace("fsteel","steel") in line.lower() and "NA" in Volume: # This means I don't have a Volume name
-                mass = float(line.split(" ")[-1].split("\n")[0])
-                print("Adding mass for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(mass) )
+                density = float(line.split(" ")[-1].split("\n")[0])
+                mass =   float(line.split(" ")[-4][:-1])
+                print(" mass for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(mass) )
+                print(" density for Material/Volume " + Material + "/" + line.split(" ")[1] + ": " + str(density) )
                 break;
 
     print ("Chkpoint, grep'd out the mass. It is " + str(mass) + " tonnes.")
@@ -165,7 +171,7 @@ def runOne(fcl):
     print ("Chkpoint, Called config_dumper " )
     time.sleep(2)
 
-    return return_sam,return_conf,mass,Volume,Material
+    return return_sam,return_conf,mass,density,Volume,Material
 
 def dotfordash(d):
     new = {}
@@ -213,7 +219,14 @@ def wrapwords(strin):
     return strout
 
 
-
+def bqpercc_to_ppb(bqpercc, rho, isotope):
+    spec_act = {"U238": 1.244e4, "Ra226": 1.244e4, "Th232": 4.06e3}  # Bq/g
+    iso_mass = {"U238": 238.05,  "Ra226": 226.03,  "Th232": 232.04}
+    ppb_mass =  bqpercc * 1e9 / (spec_act[isotope] * rho)
+    matrix_amu = 20.03 # rock, ...
+    ppbbyatoms =  ppb_mass * matrix_amu / iso_mass[isotope]
+    return ppb_mass
+    
 def main(argv):
     import json
     
@@ -259,7 +272,7 @@ def main(argv):
 #    mass      = float(args.mass     )
 
 #    return_sam,return_conf,mass2,Volume,Material,Nuclide = runOne(fhiclfile)
-    return_sam,return_conf,mass2,Volume,Material = runOne(fhiclfile)
+    return_sam,return_conf,mass2,density2,Volume,Material = runOne(fhiclfile)
 
     print("ipath1 = %s" % ipath)
 
@@ -317,12 +330,12 @@ def main(argv):
                xmax=fidvol[0][1], ymax=fidvol[1][1],
                zmin=fidvol[2][0], zmax=fidvol[2][1])
 
-    # ---- primary gammas -----------------------------------------------------
-    d_good = df.Filter('MCPdg == 22 && contains_ci(MCProcess, "primary")', "primary n")
+    # ---- primary neutrons -----------------------------------------------------
+    d_good = df.Filter('MCPdg == 2112 && contains_ci(MCProcess, "primary")', "primary n")
 
     # ---- capture gammas in LAr, inside fiducial volume ------------------------
-    d_caps = (df.Filter('MCPdg == 11 && (contains_ci(MCProcess, "comp") || contains_ci(MCProcess, "pair" || contains_ci(MCProcess, "phot") )) '
-                        '&& contains_ci(MCMaterial, "lar")' '&& MCMomentum[3]*1000. > 1.0', "e- in LAr")
+    d_caps = (df.Filter('MCPdg == 22 && contains_ci(MCProcess, "ncapture") '
+                        '&& contains_ci(MCMaterial, "lar")', "ncapture gamma in LAr")
               .Filter(fid, "fiducial")
               .Define("capX", "MCOrigin[0]")
               .Define("capY", "MCOrigin[1]")
@@ -345,7 +358,7 @@ def main(argv):
 
     if len(keys):
         uniq, inv = np.unique(keys, axis=0, return_inverse=True)
-        NspectrumInd = np.bincount(inv, weights=cols["capE"])        # MeV, one entry per parent gamma
+        NspectrumInd = np.bincount(inv, weights=cols["capE"])        # MeV, one entry per parent neutron
         parentCnt    = np.bincount(inv)                              # gammas per parent (old parentCntDict)
     else:
         NspectrumInd = np.array([])
@@ -396,11 +409,11 @@ def main(argv):
     print (f"return_conf_fmt: {return_conf_fmt}")
     mydict["config_metadata"] = return_conf_fmt
 
-    # Let's go grab up the gamma decay info
+    # Let's go grab up the neutron decay info
     # look in 0th file path for gdml directory which should hold our sub-directory w root file with the TGraph that was used.
     try:
         f = TFile(IntSpec)
-        IntSpec = f.Gammas.Integral() * 10. # All these TGraphs require this *10.
+        IntSpec = f.Neutrons.Integral() * 10. # All these TGraphs require this *10.
         print ("Integrated spectrum is discovered and over-ridden: " + str(IntSpec) + " [1/ppb/sec/gm]")
     except:
         print ("TGraph spectrum used at sim time could not be found. ")
@@ -416,47 +429,15 @@ def main(argv):
 
     print ("Integrated spectrum is: " + str(IntSpec) + " [1/ppb/sec/gm]")
     print ("mass is: " + str(mass2) + " [tonne]")
-    print ("frac is: " + str(frac) + " [ppb]")
+    print ("frac is: " + str(frac) + " [BqPercc]")
 
-    print("Ngood: " + str(Ngood))
-    tsim = Ngood/mass2/1.E6/frac/IntSpec # 1E6 to convert to gms
-    tcapinv = NcapsInd/tsim ## was NcapsInd
-
-    print ("tsim is thus: " + str(tsim) + " [sec]")
-    print ("n capture rate is: " + str(tcapinv) + " [1/sec]")
-
-    mydict["simfilepath0"] =  filelist[0]
-    mydict["ncaptures"] = NcapsInd ## was NcapsInd
-    mydict["hits"] = (h.tolist(),np.around(b,6).tolist())
-
-    tmp = bloc
-    for ii in range(len(bloc)):
-        tmp[ii] = bloc[ii].tolist()
-    mydict["location"] = (hloc.tolist(),tmp)
-    mydict["primary"] = "gammas"
-
-
-    mydict["massMaterial_gm"] = mass2*1.0E6
-    mydict["IntegratedSpectrum_invgm_ppb_sec"] = IntSpec 
-    mydict["frac_ppb"] = frac
-    mydict["simtime_sec"] = tsim
-    mydict["ncaptime_invsec"] = tcapinv
-
-### Finally, put a couple variables (redundantly) at top level, 26-Apr-2022.
-    mydict["volume"] = Volume
-    mydict["nuclide"] = "Null"
-    mydict["material"] = Material
-
-    print(f"mydict[config_meta].keys():  {mydict['config_metadata'].keys()}")
-    
-    cngkeys = str( mydict["config_metadata"]["cGammaGen"].keys())
-
+    cngkeys = str( mydict["config_metadata"]["cNeutronGen"].keys())
 
     if "Volume" in cngkeys:
-        mydict["volume"] = mydict["config_metadata"]["cGammaGen"]["Volume"][0] 
+        mydict["volume"] = mydict["config_metadata"]["cNeutronGen"]["Volume"][0] 
 
     if "Nuclide" in cngkeys:
-        tmpnuc = mydict["config_metadata"]["cGammaGen"]["Nuclide"][0] 
+        tmpnuc = mydict["config_metadata"]["cNeutronGen"]["Nuclide"][0] 
         ## re-order the string, per Sagar
         tmpnucbits = tmpnuc.split("_")
         radn = earlylate = total = leftover = ""
@@ -481,9 +462,45 @@ def main(argv):
         elif "late" in tmpnuc.lower():
             mydict["nuclide"] = "Ra226"
 
+
+    # we need it in ppb for normalizing IntSpec
+    frac =  bqpercc_to_ppb(frac, density2, mydict["nuclide"])
+    print ("frac for this nuclide and for this material is: " + str(frac) + " [ppb]")    
+
+    print("Ngood: " + str(Ngood))
+    tsim = Ngood/mass2/1.E6/frac/IntSpec # 1E6 to convert to gms
+    tcapinv = NcapsInd/tsim ## was NcapsInd
+
+    print ("tsim is thus: " + str(tsim) + " [sec]")
+    print ("n capture rate is: " + str(tcapinv) + " [1/sec]")
+
+    mydict["simfilepath0"] =  filelist[0]
+    mydict["ncaptures"] = NcapsInd ## was NcapsInd
+    mydict["hits"] = (h.tolist(),np.around(b,6).tolist())
+
+    tmp = bloc
+    for ii in range(len(bloc)):
+        tmp[ii] = bloc[ii].tolist()
+    mydict["location"] = (hloc.tolist(),tmp)
+    mydict["primary"] = "neutrons"
+
+
+    mydict["massMaterial_gm"] = mass2*1.0E6
+    mydict["IntegratedSpectrum_invgm_ppb_sec"] = IntSpec 
+    mydict["frac_ppb"] = frac
+    mydict["simtime_sec"] = tsim
+    mydict["ncaptime_invsec"] = tcapinv
+
+### Finally, put a couple variables (redundantly) at top level, 26-Apr-2022.
+    mydict["volume"] = Volume
+    mydict["nuclide"] = "Null"
+    mydict["material"] = Material
+
+
+    
     ### Now go write the json file.
     prefix = 'bgdexp'
-    sample = Volume+"-"+Material  # 'coldCryoLayer1-gammas'
+    sample = Volume+"-"+Material  # 'coldCryoLayer1-neutrons'
     import json
     fjout = prefix+'_'+sample+'_'+ mydict["nuclide"] +'.json'
     with open(fjout, 'w') as fp:

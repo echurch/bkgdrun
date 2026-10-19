@@ -8,7 +8,7 @@ TOPDIR=$(cd "${1:?usage: submit.sh TOPDIR [max_concurrent]}" && pwd) || exit 1
 MAX_CONCURRENT=${2:-100}
 BKGD=$(cd "$SLURMANA/.." && pwd)
 FCL_LIST=${FCL_LIST:-$TOPDIR/fcl_list.txt}
-ROOT_DIR=${ROOT_DIR:-$BKGD/slurm/run/root_files}
+ROOT_DIR=${ROOT_DIR:-$BKGD/slurmneutron/run/root_files}
 [[ -f "$FCL_LIST" ]] || { echo "Missing $FCL_LIST"; exit 1; }
 
 # Only run fcls whose input root file already exists; skip the rest.

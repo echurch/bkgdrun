@@ -5,7 +5,7 @@
 FCL="$1"
 TASK_DIR="$2"
 
-WORKER_DIR=/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/slurm
+WORKER_DIR=/rcfs/projects/dunelb/chur558/containers/worker/duneec/v10_17_01/bkgdrun/slurmneutron
 
 echo "=== Inside container on $(hostname) ==="
 echo "FCL      : $FCL"
