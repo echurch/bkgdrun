@@ -23,7 +23,7 @@ echo "FCL=$FCL"; echo "BqPercc=$BQ  Nuclide=$NUC"; echo "-i $IN"; echo "-s $SPEC
 ls $IN*-hist*.root >/dev/null 2>&1 || { echo "No input matches $IN*-hist*.root"; exit 1; }
 
 cd "$WORKER_DIR" || exit 1
-source "$V/setup.sh"
+source "$V/setup_grid.sh"
 
 
 # j4bgexp copies the fcl into $WORK/lar-tmp-out and runs lar there, so make sure

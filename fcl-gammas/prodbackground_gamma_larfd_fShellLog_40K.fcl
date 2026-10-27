@@ -106,7 +106,9 @@ services.Geometry.ValidateGDML: false
 services.Geometry.GDML: "dunevd10kt_v7_full10kt_ggd_wires.gdml"
 services.AuxDetGeometry.GDML: "dunevd10kt_v7_full10kt_ggd_wires.gdml"
 
-services.LArG4Parameters.PhysicsList: "Shielding"
+services.PhysicsList.PhysicsListName: "QGSP_BIC_AllHP"
+services.LArG4Parameters.PhysicsList: "QGSP_BIC_AllHP"
+services.LArG4Parameters.EnableNuDEX: true
 ##services.Geometry.GDML.SurfaceY: 140000
 
 physics.producers.largeant.inputCollections: [ "cGammaGen" ]

@@ -436,6 +436,7 @@ def main(argv):
     if "Volume" in cngkeys:
         mydict["volume"] = mydict["config_metadata"]["cNeutronGen"]["Volume"][0] 
 
+    mydict["nuclide"] = "Null"
     if "Nuclide" in cngkeys:
         tmpnuc = mydict["config_metadata"]["cNeutronGen"]["Nuclide"][0] 
         ## re-order the string, per Sagar
@@ -493,7 +494,6 @@ def main(argv):
 
 ### Finally, put a couple variables (redundantly) at top level, 26-Apr-2022.
     mydict["volume"] = Volume
-    mydict["nuclide"] = "Null"
     mydict["material"] = Material
 
 

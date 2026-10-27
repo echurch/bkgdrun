@@ -11,10 +11,10 @@ echo "=== Inside container on $(hostname) ==="
 echo "FCL      : $FCL"
 echo "TASK_DIR : $TASK_DIR"
 
-# Same as your interactive step: source setup.sh after entering the container.
-# (Adjust the path if setup.sh lives somewhere else.)
+# Same as your interactive step: source setup_grid.sh after entering the container.
+# (Adjust the path if setup_grid.sh lives somewhere else.)
 cd "$WORKER_DIR" || exit 1
-source /rcfs/projects/dunelb/chur558/containers/worker//duneec/v10_17_01/bkgdrun/setup.sh 
+source /rcfs/projects/dunelb/chur558/containers/worker//duneec/v10_17_01/bkgdrun/setup_grid.sh 
 
 # Make sure includes sitting next to the fcl are found
 export FHICL_FILE_PATH="$(dirname "$FCL"):${FHICL_FILE_PATH}"

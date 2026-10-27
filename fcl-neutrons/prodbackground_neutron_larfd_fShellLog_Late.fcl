@@ -106,7 +106,7 @@ services.Geometry.ValidateGDML: false
 services.Geometry.GDML: "dunevd10kt_v7_full10kt_ggd_wires.gdml"
 services.AuxDetGeometry.GDML: "dunevd10kt_v7_full10kt_ggd_wires.gdml"
 
-services.LArG4Parameters.PhysicsList: "Shielding"
+
 ##services.Geometry.GDML.SurfaceY: 140000
 
 physics.producers.largeant.inputCollections: [ "cNeutronGen" ]
@@ -115,6 +115,9 @@ physics.analyzers.largana.Ndaughters: 20
 
 services.LArPropertiesService.ScintYield: 0
 services.message: @local::standard_info
+services.PhysicsList.PhysicsListName: "QGSP_BIC_AllHP"
+services.LArG4Parameters.PhysicsList: "QGSP_BIC_AllHP"
+services.LArG4Parameters.EnableNuDEX: true
 
 #services.message.standard_info.destinations.infomsg.type: "file"
 #services.message.standard_info.destinations.infomsg.file: "./bkgd-msgs.out"
